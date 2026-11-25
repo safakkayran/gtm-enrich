@@ -11,8 +11,15 @@ if TYPE_CHECKING:
     from respx import MockRouter
 
 from gtm_enrich.providers.dns import fetch_dns
+from gtm_enrich.providers.github import fetch_github
+from gtm_enrich.providers.rss import fetch_rss
 from gtm_enrich.providers.site_checks import fetch_site_checks
 from gtm_enrich.providers.website import fetch_website
+
+EXPECTED_PUBLIC_REPOS = 42
+EXPECTED_REPO_COUNT = 2
+EXPECTED_STARS = 100
+EXPECTED_POST_COUNT = 2
 
 
 @pytest.mark.asyncio
@@ -119,3 +126,162 @@ async def test_website_fetch_via_jina(respx_mock: MockRouter):
     assert "open_roles" in result.fields
     assert "latest_blog_titles" in result.fields
     assert "tech_hints" in result.fields
+
+
+@pytest.mark.asyncio
+async def test_github_org_found(respx_mock: MockRouter):
+    """GitHub provider returns org data when org exists."""
+    respx_mock.get("https://api.github.com/orgs/example").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "login": "example",
+                "name": "Example Inc",
+                "description": "B2B SaaS company",
+                "public_repos": EXPECTED_PUBLIC_REPOS,
+                "followers": 100,
+                "created_at": "2020-01-01T00:00:00Z",
+                "location": "San Francisco",
+                "blog": "https://example.com",
+            },
+        )
+    )
+    repos_json = [
+        {
+            "name": "repo1",
+            "stargazers_count": 500,
+            "forks_count": 50,
+            "language": "Python",
+            "description": "Core product",
+        },
+        {
+            "name": "repo2",
+            "stargazers_count": 200,
+            "forks_count": 20,
+            "language": "TypeScript",
+            "description": "SDK",
+        },
+    ]
+    respx_mock.get("https://api.github.com/orgs/example/repos?sort=stars&per_page=5").mock(
+        return_value=httpx.Response(200, json=repos_json)
+    )
+
+    result = await fetch_github("example.com")
+
+    assert result.provider == "github"
+    assert result.ok is True
+    assert result.fields["github_org"] == "example"
+    assert result.fields["github_org_name"] == "Example Inc"
+    assert result.fields["github_org_public_repos"] == EXPECTED_PUBLIC_REPOS
+    assert len(result.fields["github_top_repos"]) == EXPECTED_REPO_COUNT
+
+
+@pytest.mark.asyncio
+async def test_github_repo_search_fallback(respx_mock: MockRouter):
+    """GitHub provider falls back to repo search when org not found."""
+    respx_mock.get("https://api.github.com/orgs/example").mock(
+        return_value=httpx.Response(404)
+    )
+    respx_mock.get(
+        "https://api.github.com/search/repositories?q=example.com+in:description,readme&sort=stars&per_page=5"
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "items": [
+                    {
+                        "full_name": "example/repo",
+                        "stargazers_count": EXPECTED_STARS,
+                        "forks_count": 10,
+                        "description": "Example repo",
+                        "language": "Go",
+                        "updated_at": "2024-01-01T00:00:00Z",
+                        "license": {"name": "MIT License"},
+                    }
+                ]
+            },
+        )
+    )
+
+    result = await fetch_github("example.com")
+
+    assert result.provider == "github"
+    assert result.ok is True
+    assert result.fields["github_repo"] == "example/repo"
+    assert result.fields["github_stars"] == EXPECTED_STARS
+
+
+@pytest.mark.asyncio
+async def test_rss_feed_discovery(respx_mock: MockRouter):
+    """RSS provider discovers feed and parses entries."""
+    feed_xml = (
+        '<?xml version="1.0"?>'
+        '<rss version="2.0">'
+        "<channel>"
+        "    <title>Example Blog</title>"
+        "    <description>Latest updates</description>"
+        "    <updated>2024-01-15T00:00:00Z</updated>"
+        "    <item>"
+        "        <title>Post 1</title>"
+        "        <link>https://example.com/post1</link>"
+        "        <pubDate>Mon, 15 Jan 2024 00:00:00 GMT</pubDate>"
+        "        <description>Summary 1</description>"
+        "        <category>product</category>"
+        "    </item>"
+        "    <item>"
+        "        <title>Post 2</title>"
+        "        <link>https://example.com/post2</link>"
+        "        <pubDate>Tue, 16 Jan 2024 00:00:00 GMT</pubDate>"
+        "        <description>Summary 2</description>"
+        "        <category>engineering</category>"
+        "    </item>"
+        "</channel>"
+        "</rss>"
+    )
+    respx_mock.get("https://example.com/feed.xml").mock(
+        return_value=httpx.Response(200, text=feed_xml)
+    )
+    respx_mock.get("https://example.com/").mock(
+        return_value=httpx.Response(200, text="<html><body>Home</body></html>")
+    )
+
+    result = await fetch_rss("example.com")
+
+    assert result.provider == "rss"
+    assert result.ok is True
+    assert result.fields["feed_url"] == "https://example.com/feed.xml"
+    assert result.fields["feed_title"] == "Example Blog"
+    assert result.fields["post_count"] == EXPECTED_POST_COUNT
+    assert len(result.fields["recent_posts"]) == EXPECTED_POST_COUNT
+    assert result.fields["recent_posts"][0]["title"] == "Post 1"
+    assert result.fields["recent_posts"][0]["tags"] == ["product"]
+
+
+@pytest.mark.asyncio
+async def test_rss_no_feed_found(respx_mock: MockRouter):
+    """RSS provider returns ok=False when no feed exists."""
+    for path in [
+        "/feed.xml",
+        "/rss.xml",
+        "/atom.xml",
+        "/feed",
+        "/rss",
+        "/blog/rss.xml",
+        "/blog/feed.xml",
+        "/blog/feed",
+        "/changelog.xml",
+        "/changelog/feed.xml",
+        "/news/rss.xml",
+        "/news/feed.xml",
+    ]:
+        respx_mock.get(f"https://example.com{path}").mock(return_value=httpx.Response(404))
+    respx_mock.get("https://example.com/").mock(
+        return_value=httpx.Response(200, text="<html><body>No feeds</body></html>")
+    )
+
+    result = await fetch_rss("example.com")
+
+    assert result.provider == "rss"
+    assert result.ok is False
+    assert result.error is not None
+    assert "No RSS/Atom feed found" in result.error
