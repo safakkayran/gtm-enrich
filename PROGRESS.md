@@ -61,8 +61,9 @@
 
 ---
 
-### M6 - Apify provider (optional)
-- Status: NOT STARTED
+### M6 - Apify provider (optional) ⏭️
+- Status: SKIPPED (user deferred — "sonra ekleriz")
+- To add: `providers/apify.py` with Apify actor integration, `APIFY_TOKEN` config
 
 ---
 
