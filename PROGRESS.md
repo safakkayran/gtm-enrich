@@ -73,8 +73,10 @@
 
 ---
 
-### M8 - Twenty push
-- Status: NOT STARTED
+### M8 - Twenty push ✅
+- `twenty_push.py`: TwentyClient with upsert by domain, payload builder, async push with batch support
+- `test_m8_twenty_push.py`: 6 tests (init, headers, no-key, payload build, PushResult, close)
+- Gate: PASSED (27 tests)
 
 ---
 
