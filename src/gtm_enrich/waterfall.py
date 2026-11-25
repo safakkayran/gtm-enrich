@@ -25,6 +25,7 @@ from gtm_enrich.providers import (
     fetch_site_checks,
     fetch_website,
 )
+from gtm_enrich.research import research_accounts
 
 PROVIDER_FUNCS: dict[ProviderName, Callable[[str], Any]] = {
     ProviderName.WEBSITE: fetch_website,
@@ -269,6 +270,7 @@ async def run_enrichment(
     icp_config: ICPConfig,
 ) -> RunResult:
     """Run enrichment for multiple domains."""
+
     start_time = time.time()
     accounts = []
     all_provider_results = []
@@ -279,10 +281,13 @@ async def run_enrichment(
         accounts.append(account)
         all_provider_results.extend(waterfall.provider_results)
 
+    # Research step
+    briefs = research_accounts(accounts, icp_config.description)
+
     total_latency = int((time.time() - start_time) * 1000)
     return RunResult(
         accounts=accounts,
-        briefs={},
+        briefs=briefs,
         total_latency_ms=total_latency,
         total_cost_usd=0.0,
         provider_stats={},
