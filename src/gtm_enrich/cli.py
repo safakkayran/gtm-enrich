@@ -14,6 +14,7 @@ from gtm_enrich import __version__
 from gtm_enrich.config import get_default_icp_config, get_default_waterfall_config, get_settings
 from gtm_enrich.models import ProviderName
 from gtm_enrich.report import write_run_result
+from gtm_enrich.twenty_push import push_results_to_twenty
 from gtm_enrich.waterfall import run_enrichment
 
 app = typer.Typer(
@@ -100,6 +101,49 @@ def run(
 def version():
     """Show version."""
     console.print(f"gtm-enrich {__version__}")
+
+
+@app.command()
+def push(
+    results: Annotated[str, typer.Argument(help="Path to enrichment results JSON")],
+    briefs: Annotated[
+        str | None,
+        typer.Option("--briefs", "-b", help="Path to research briefs JSON"),
+    ] = None,
+):
+    """Push enrichment results to Twenty CRM."""
+    get_settings()  # validate settings
+
+    results_path = Path(results)
+    briefs_path = Path(briefs) if briefs else None
+
+    if not results_path.exists():
+        console.print(f"[red]Results file not found: {results_path}[/red]")
+        raise typer.Exit(1)
+
+    console.print(f"[bold]Pushing to Twenty CRM from {results_path}...[/bold]")
+
+    async def _push():
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Pushing accounts...", total=None)
+            push_results = await push_results_to_twenty(results_path, briefs_path)
+            progress.update(task, description=f"Completed {len(push_results)} accounts")
+
+        success_count = sum(1 for r in push_results if r.success)
+        fail_count = len(push_results) - success_count
+
+        console.print(f"[green]✓[/green] Pushed {success_count}/{len(push_results)} accounts")
+        if fail_count:
+            console.print(f"[red]✗[/red] Failed: {fail_count}")
+            for r in push_results:
+                if not r.success:
+                    console.print(f"  {r.error}")
+
+    asyncio.run(_push())
 
 
 if __name__ == "__main__":
