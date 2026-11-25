@@ -33,8 +33,11 @@
 
 ---
 
-### M3 - GitHub + RSS providers
-- Status: NOT STARTED
+### M3 - GitHub + RSS providers ✅
+- `github.py`: Org lookup by domain guess, falls back to repo search; extracts stars, forks, language, license, top repos
+- `rss.py`: Discovers feed via common paths + link rel=alternate; parses entries with title, link, published, summary, tags
+- Tests in `test_m2_providers.py` extended (5 new tests: 2 GitHub, 3 RSS)
+- Gate: PASSED (8 tests)
 
 ---
 
