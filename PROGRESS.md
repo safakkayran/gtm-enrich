@@ -15,8 +15,11 @@
 
 ---
 
-### M1 - Core models, cache, LLM wrapper
-- Status: NOT STARTED
+### M1 - Core models, cache, LLM wrapper ✅
+- `config.py`: Settings with pydantic-settings (LiteLLM, GitHub, Apify, Twenty, cache, concurrency)
+- `models.py`: All Pydantic models (EnrichedAccount, WaterfallField, ProviderResult, Signal, Angle, ResearchBrief, EvalResult, WaterfallConfig, ICPConfig, RunResult)
+- `llm.py`: CachedLLMClient with disk cache, retry on 429/5xx, JSON validation retry
+- Gate: PASSED (1 test)
 
 ---
 
