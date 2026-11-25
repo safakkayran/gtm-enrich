@@ -1,0 +1,57 @@
+[project]
+name = "gtm-enrich"
+version = "0.1.0"
+description = "Waterfall enrichment and account research CLI for GTM teams"
+readme = "README.md"
+authors = [{name = "safakkayran", email = "safakkayran@gmail.com"}]
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.3",
+    "typer>=0.12",
+    "rich>=13.7",
+    "openai>=1.35",
+    "python-dotenv>=1.0",
+    "selectolax>=0.3",
+    "feedparser>=6.0",
+    "dnspython>=2.4",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+gtm-enrich = "gtm_enrich.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.13.9,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+    "ruff>=0.5",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+lint.select = ["E", "F", "I", "UP", "B", "C4", "PTH", "PL", "TRY", "NPY", "RSE", "SIM", "TID", "ARG", "ERA", "PD", "PGH", "PIE", "PT", "Q", "RET", "SLF", "SLOT", "TCH", "TID", "TRY", "UP"]
+lint.ignore = ["S101", "S106", "B008", "B009", "B011", "PLR0913", "PLR0914", "PLR0915", "TRY002", "TRY003", "TRY300", "TRY301", "T201", "T203"]
+format.quote-style = "double"
+format.indent-style = "space"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
