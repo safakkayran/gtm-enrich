@@ -23,8 +23,13 @@
 
 ---
 
-### M2 - Website + site_checks + dns providers
-- Status: NOT STARTED
+### M2 - Website + site_checks + dns providers ✅
+- `website.py`: Jina Reader + httpx fallback, extracts description, pricing page, careers page, blog posts, tech hints, open roles
+- `site_checks.py`: On-page SEO/technical (title, meta, h1 count, llms.txt, sitemap, schema.org)
+- `dns.py`: MX record lookup with email provider identification (Google Workspace, Microsoft 365, etc.)
+- `providers/__init__.py`: Exports all fetch functions
+- Tests in `test_m2_providers.py` (3 tests) covering all three providers
+- Gate: PASSED (4 tests)
 
 ---
 
