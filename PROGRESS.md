@@ -53,8 +53,11 @@
 
 ---
 
-### M5 - Research step
-- Status: NOT STARTED
+### M5 - Research step ✅
+- `research.py`: Signal extraction from all provider fields, LLM-powered research briefs with 3 outbound angles (email/LinkedIn), fallback when LLM unavailable
+- `waterfall.py`: Integrated research step into run_enrichment
+- Tests in `test_m5_research.py` (5 tests: signal extraction per provider, fallback brief, multi-account)
+- Gate: PASSED (16 tests)
 
 ---
 
