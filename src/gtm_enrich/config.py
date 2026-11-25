@@ -8,6 +8,40 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from gtm_enrich.models import ICPConfig, ProviderName, WaterfallConfig
+
+DEFAULT_PROVIDER_ORDER = [
+    ProviderName.WEBSITE,
+    ProviderName.SITE_CHECKS,
+    ProviderName.DNS,
+    ProviderName.GITHUB,
+    ProviderName.RSS,
+]
+
+
+DEFAULT_ICP_CONFIG = ICPConfig(
+    description="B2B SaaS with sales team + active hiring",
+    positive_signals=[
+        "pricing_page",
+        "active_hiring",
+        "tech_stack_signals",
+        "github_presence",
+        "active_blog",
+        "professional_email",
+    ],
+    negative_signals=[
+        "no_website",
+        "personal_email",
+        "no_tech_stack",
+        "stale_content",
+    ],
+)
+
+
+DEFAULT_WATERFALL_CONFIG = WaterfallConfig(
+    provider_order=DEFAULT_PROVIDER_ORDER,
+)
+
 
 class Settings(BaseSettings):
     """Application settings loaded from environment."""
@@ -48,6 +82,14 @@ class Settings(BaseSettings):
 
     # Output
     OUTPUT_DIR: Path = Field(default=Path("out"))
+
+
+def get_default_waterfall_config() -> WaterfallConfig:
+    return DEFAULT_WATERFALL_CONFIG
+
+
+def get_default_icp_config() -> ICPConfig:
+    return DEFAULT_ICP_CONFIG
 
 
 @lru_cache

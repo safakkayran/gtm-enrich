@@ -51,8 +51,11 @@ class EnrichedAccount(BaseModel):
     company_name: str | None = None
     description: WaterfallField | None = None
     pricing_page_url: WaterfallField | None = None
+    pricing_page_text: WaterfallField | None = None
     careers_page_url: WaterfallField | None = None
+    careers_page_text: WaterfallField | None = None
     open_roles: WaterfallField | None = None
+    blog_page_url: WaterfallField | None = None
     latest_blog_titles: WaterfallField | None = None
     tech_hints: WaterfallField | None = None
     site_title: WaterfallField | None = None
@@ -62,13 +65,19 @@ class EnrichedAccount(BaseModel):
     has_sitemap: WaterfallField | None = None
     has_schema_org: WaterfallField | None = None
     github_org: WaterfallField | None = None
+    github_org_name: WaterfallField | None = None
+    github_repo: WaterfallField | None = None
+    github_stars: WaterfallField | None = None
     github_public_repos: WaterfallField | None = None
     github_top_repos: WaterfallField | None = None
     github_recent_activity: WaterfallField | None = None
     rss_feed_url: WaterfallField | None = None
+    rss_feed_title: WaterfallField | None = None
     rss_latest_items: WaterfallField | None = None
     mx_records: WaterfallField | None = None
     email_provider: WaterfallField | None = None
+    icp_score: int = 0
+    icp_reasons: list[str] = Field(default_factory=list)
     enriched_at: datetime = Field(default_factory=datetime.utcnow)
 
     def get_field(self, name: str) -> WaterfallField | None:
@@ -134,7 +143,8 @@ class EvalResult(BaseModel):
 class WaterfallConfig(BaseModel):
     """Waterfall configuration for field enrichment."""
 
-    fields: dict[str, list[ProviderName]]
+    provider_order: list[ProviderName]
+    fields: dict[str, list[ProviderName]] = Field(default_factory=dict)
 
 
 class ICPConfig(BaseModel):
@@ -143,6 +153,20 @@ class ICPConfig(BaseModel):
     description: str
     positive_signals: list[str]
     negative_signals: list[str]
+
+    # Weights for scoring
+    weight_pricing_page: int = 10
+    weight_active_hiring: int = 15
+    weight_tech_per_signal: int = 3
+    max_tech_score: int = 15
+    weight_github: int = 10
+    weight_blog_per_post: int = 2
+    max_blog_score: int = 10
+    weight_pro_email: int = 5
+    weight_site_quality: int = 5
+    weight_schema: int = 3
+    weight_sitemap: int = 2
+    weight_llms_txt: int = 2
 
 
 class RunResult(BaseModel):
@@ -153,3 +177,6 @@ class RunResult(BaseModel):
     total_latency_ms: int
     total_cost_usd: float
     provider_stats: dict[str, dict]  # provider -> {hits, misses, total_latency, total_cost}
+    total_domains: int = 0
+    successful: int = 0
+    provider_results: list[ProviderResult] = Field(default_factory=list)
