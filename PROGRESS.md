@@ -41,8 +41,15 @@
 
 ---
 
-### M4 - Waterfall engine + run + report (REVIEW CHECKPOINT)
-- Status: NOT STARTED
+### M4 - Waterfall engine + run + report (REVIEW CHECKPOINT) ✅
+- `waterfall.py`: Core engine - runs providers in priority order, first non-null wins with provenance
+- `run_enrichment()`: Orchestrates multi-domain runs, builds EnrichedAccount with WaterfallField
+- `report.py`: JSON/CSV output with summary stats
+- `cli.py`: `gtm-enrich run` command with domain list, provider order, format options
+- `models.py`: Extended with WaterfallConfig.provider_order, ICPConfig weights
+- `config.py`: Default configs for waterfall and ICP
+- Tests in `test_m4_waterfall.py` (3 tests: single domain, provenance, multi-domain)
+- Gate: PASSED (11 tests)
 
 ---
 
