@@ -80,8 +80,10 @@
 
 ---
 
-### M9 - Polish (FINAL REVIEW CHECKPOINT)
-- Status: NOT STARTED
+### M9 - Polish (FINAL REVIEW CHECKPOINT) ✅
+- `cli.py`: Added `push` command for Twenty CRM integration
+- `README.md`: Complete documentation (install, usage, providers, waterfall, evals, structure)
+- Gate: PASSED (27 tests)
 
 ---
 
