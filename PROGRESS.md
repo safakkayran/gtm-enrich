@@ -66,8 +66,10 @@
 
 ---
 
-### M7 - Evals
-- Status: NOT STARTED
+### M7 - Evals ✅
+- `evals.py`: Dataset-driven evaluation (CSV/JSONL), 6 rule checks + judge scores (1-5), judge model `nim-step`
+- `test_m7_evals.py`: 5 tests (evaluate_angle, CSV/JSONL load, run_evals output, EvalResult model)
+- Gate: PASSED (21 tests)
 
 ---
 
